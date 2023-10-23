@@ -78,9 +78,11 @@ app.get('/', (req, res) => {
             questions = questions.concat(userQuestions[key]);
         }
         html += `
-            <img src="path_to_your_image" alt="Your Image" style="width: 150px; height: 150px;">
+            <img src="images/cdec (2).jpg" alt=" Image" style="width: 150px; height: 150px;">
             <h2>All Questions</h2>
             <ul>
+
+   
         `;
     
         for (let i = 0; i < questions.length; i++) {
@@ -88,10 +90,15 @@ app.get('/', (req, res) => {
         }
     
         html += `
+        
             </ul>
+
+            <form action="/logout" method="post">
+            <input type="submit" value="Logout">
+        </form>
         `;
     }
-    
+    if (userType === 'student') {
     html += `
         <h2>Submit a Question</h2>
         <form action="/submit" method="post">
@@ -104,7 +111,7 @@ app.get('/', (req, res) => {
         </form>
         </body>
         </html>
-    `;
+    `;}
     
         res.send(html);
     } else {
