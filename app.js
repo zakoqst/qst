@@ -16,46 +16,96 @@ app.get('/', (req, res) => {
 
     if (loggedIn) {
         let html = `
-            <html>
-            <head>
-                <title>Question Form</title>
-            </head>
-            <body>
-                <h2>Submit a Question</h2>
-                <form action="/submit" method="post">
-                    <label for="question">Enter your question:</label><br>
-                    <input type="text" id="question" name="question"><br><br>
-                    <input type="submit" value="Submit">
-                </form>
-        `;
-
-        if (userType === 'conference') {
-            let questions = [];
-            for (const key in userQuestions) {
-                questions = questions.concat(userQuestions[key]);
-            }
-            html += `
-                <h2>All Questions</h2>
-                <ul>
-            `;
-
-            for (let i = 0; i < questions.length; i++) {
-                html += `<li>${questions[i]}</li>`;
-            }
-
-            html += `
-                </ul>
-            `;
+        <html>
+        <head>
+            <title>Question Form</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    flex-direction: column;
+                    height: 100vh;
+                    margin: 0;
+                }
+                form, ul {
+                    border: 1px solid #ddd;
+                    padding: 20px;
+                    border-radius: 5px;
+                    width: 300px;
+                    margin-top: 20px;
+                }
+                h2 {
+                    text-align: center;
+                }
+                label {
+                    display: block;
+                    margin: 10px 0 5px;
+                }
+                input[type="text"] {
+                    width: 100%;
+                    padding: 8px;
+                    margin-bottom: 15px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    box-sizing: border-box;
+                }
+                input[type="submit"] {
+                    width: 100%;
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 15px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+                input[type="submit"]:hover {
+                    background-color: #45a049;
+                }
+                ul {
+                    list-style-type: none;
+                    padding: 0;
+                }
+            </style>
+        </head>
+        <body>
+    `;
+    
+    if (userType === 'conference') {
+        let questions = [];
+        for (const key in userQuestions) {
+            questions = questions.concat(userQuestions[key]);
         }
-
         html += `
-            <form action="/logout" method="post">
-                <input type="submit" value="Logout">
-            </form>
-            </body>
-            </html>
+            <img src="path_to_your_image" alt="Your Image" style="width: 150px; height: 150px;">
+            <h2>All Questions</h2>
+            <ul>
         `;
-
+    
+        for (let i = 0; i < questions.length; i++) {
+            html += `<li>${questions[i]}</li>`;
+        }
+    
+        html += `
+            </ul>
+        `;
+    }
+    
+    html += `
+        <h2>Submit a Question</h2>
+        <form action="/submit" method="post">
+            <label for="question">Enter your question:</label><br>
+            <input type="text" id="question" name="question"><br><br>
+            <input type="submit" value="Submit">
+        </form>
+        <form action="/logout" method="post">
+            <input type="submit" value="Logout">
+        </form>
+        </body>
+        </html>
+    `;
+    
         res.send(html);
     } else {
         res.sendFile(__dirname + '/login.html');

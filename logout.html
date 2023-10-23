@@ -3,11 +3,47 @@
 
 <head>
     <title>Logout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+            text-align: center;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            background-color: #f44336;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #d32f2f;
+        }
+    </style>
 </head>
 
 <body>
-    <h2>Logout</h2>
     <form action="/logout" method="post">
+        <h2>Logout</h2>
         <input type="submit" value="Logout">
     </form>
 </body>
