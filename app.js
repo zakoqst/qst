@@ -5,6 +5,8 @@ const fs = require('fs');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 app.use(session({ secret: 'secret-key', resave: true, saveUninitialized: true }));
 
 let userQuestions = {};
