@@ -100,11 +100,63 @@ app.get('/', (req, res) => {
     }
     if (userType === 'student') {
     html += `
+    
+<head>
+    <title>Login</title>
+    <style>
+        /* Your CSS styles here */
+        /* ... */
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .rate-section {
+            margin-top: 20px;
+        }
+        .rating input {
+            display: none;
+        }
+        .rating label {
+            display: inline-block;
+            font-size: 30px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .rating label:before {
+            content: '\2606'; /* Unicode character for empty star */
+        }
+        .rating input:checked ~ label:before {
+            color: #ffca08; /* Color for the selected star */
+            content: '\2605'; /* Unicode character for filled star */
+        }
+    </style>
+</head>
+
         <h2>Submit a Question</h2>
         <form action="/submit" method="post">
             <label for="question">Enter your question:</label><br>
             <input type="text" id="question" name="question"><br><br>
             <input type="submit" value="Submit">
+
+            
+         <div class="rate-section">
+            <h3>Rate Me</h3>
+            <p>Please provide your feedback by rating our service:</p>
+            <div class="rating">
+                <input type="radio" id="star5" name="rating" value="5" />
+                <label for="star5">☆</label>
+                <input type="radio" id="star4" name="rating" value="4" />
+                <label for="star4">☆</label>
+                <input type="radio" id="star3" name="rating" value="3" />
+                <label for="star3">☆</label>
+                <input type="radio" id="star2" name="rating" value="2" />
+                <label for="star2">☆</label>
+                <input type="radio" id="star1" name="rating" value="1" />
+                <label for="star1">☆</label>
+            </div>
+        </div>
         </form>
         <form action="/logout" method="post">
             <input type="submit" value="Logout">
