@@ -138,7 +138,7 @@ app.get('/', (req, res) => {
         }
     </style>
 </head>
-            <img src="images/cdec.jpg" alt=" Image" style="width: 150px; height: 150px;">
+            <img src="images/student.webp" alt=" Image" style="width: 150px; height: 150px;">
 
         <h2>Submit a Question</h2>
         <form action="/submit" method="post">
