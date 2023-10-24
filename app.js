@@ -125,11 +125,11 @@ app.get('/', (req, res) => {
             cursor: pointer;
         }
         .rating label:before {
-            content: '\2606'; /* Unicode character for empty star */
+            content: '\\2606'; /* Unicode character for empty star */
         }
         .rating input:checked ~ label:before {
             color: #ffca08; /* Color for the selected star */
-            content: '\2605'; /* Unicode character for filled star */
+            content: '\\2605'; /* Unicode character for filled star */
         }
     </style>
 </head>
