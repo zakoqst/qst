@@ -81,7 +81,7 @@ app.get('/', (req, res) => {
             questions = questions.concat(userQuestions[key]);
         }
         html += `
-            <img src="images/cdec (2).jpg" alt=" Image" style="width: 150px; height: 150px;">
+            <img src="images/speaker.jpg" alt=" Image" style="width: 150px; height: 150px;">
             <h2>All Questions</h2>
             <ul>
 
@@ -138,6 +138,7 @@ app.get('/', (req, res) => {
         }
     </style>
 </head>
+            <img src="images/student.webp" alt=" Image" style="width: 150px; height: 150px;">
 
         <h2>Submit a Question</h2>
         <form action="/submit" method="post">
