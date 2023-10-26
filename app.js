@@ -115,8 +115,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
     `;
-
-    if (userType === 'أستاذ') {
+        if (userType === 'أستاذ') {
       UserQuestionsCollection.find({})
         .then(questions => {
           html += `
