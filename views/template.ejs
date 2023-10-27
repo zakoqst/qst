@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+
+<html>
+           <head>
+             <title>الدخول</title>
+             <style>
+             body {
+               font-family: Arial, sans-serif;
+               background-color: #f8f8f8;
+               margin: 0;
+               padding: 0;
+             }
+            
+             .container {
+               max-width: 600px;
+               margin: 0 auto;
+               padding: 20px;
+               background-color: #fff;
+               border-radius: 5px;
+               box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+               transform: translateX(-31px) translateY(0px);
+             }
+            
+             h2 {
+               text-align: center;
+               color: #333;
+             }
+            
+             form {
+               margin-top: 20px;
+             }
+            
+             label {
+               display: block;
+               margin-bottom: 10px;
+               color: #333;
+               font-weight: bold;
+             }
+            
+             input[type="text"] {
+               width: 100%;
+               padding: 10px;
+               font-size: 16px;
+               border-radius: 5px;
+               border: 1px solid #ddd;
+               outline: none;
+             }
+            
+             input[type="submit"] {
+               display: block;
+               margin: 18px auto;
+               padding: 10px 20px;
+               font-size: 18px;
+               background-color: #4caf50;
+               color: #fff;
+               border: none;
+               border-radius: 5px;
+               cursor: pointer;
+               transition: background-color 0.3s ease-in-out;
+             }
+             input[type="submit"]:hover {
+               background-color: #45a049;
+             }
+            
+             .rate-section {
+               margin-top: 20px;
+             }
+            
+             .rating {
+               display: flex;
+               justify-content: center;
+               align-items: center;
+               flex-direction: row;
+               font-size: 30px;
+             }
+            
+             .rating input {
+               display: none;
+             }
+            
+             .rating label {
+               color: #ddd;
+               margin: 0 5px;
+               cursor: pointer;
+               transition: color 0.3s ease-in-out;
+             }
+            
+             .rating input:checked ~ label,
+             .rating input:hover ~ label {
+               color: #ffca08; /* Color for the selected star */
+             }
+            
+             .container img {
+               display: inline-block;
+               transform: translateX(218px) translateY(0px);
+             }
+            
+             #question {
+               transform: translateX(0px) translateY(3px) !important;
+             }
+            
+             .container form p {
+               text-align: center;
+             }
+            
+             .container form h3 {
+               text-align: center;
+               position: relative;
+               top: 6px;
+             }
+             /* Container */
+             .container{
+              transform:translatex(-12px) translatey(155px);
+              border-width:1px;
+              border-color:#a0a0a0;
+              border-style:solid;
+              margin-right:auto !important;
+             }
+            
+             /* Label */
+             .container form label{
+              text-align:right;
+              position:relative;
+              left:-6px;
+             }
+  .container h2 {
+    color: #333;
+    font-size: 24px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+
+            
+             </style>
+           </head>
+           <body>
+            <div class="container">
+              <img src="images/student.webp" alt="Image" style="width: 150px; height: 150px;">
+              <h2>إطرح سؤالك</h2>
+              <form action="/submit" method="post">
+                <label for="question">أكتب سؤالك هنا</label>
+                <input type="text" id="question" name="question">
+                <input type="submit" value="Submit">
+                <div class="rate-section">
+                  <h3>إعطي تقييما للأستاذ</h3>
+                  <p>Please provide your feedback by rating our service:</p>
+                  <div class="rating">
+                    <input type="radio" id="star5" name="rating" value="5" />
+                    <label for="star5">&#9733;</label>
+                    <input type="radio" id="star4" name="rating" value="4" />
+                    <label for="star4">&#9733;</label>
+                    <input type="radio" id="star3" name="rating" value="3" />
+                    <label for="star3">&#9733;</label>
+                    <input type="radio" id="star2" name="rating" value="2" />
+                    <label for="star2">&#9733;</label>
+                    <input type="radio" id="star1" name="rating" value="1" />
+                    <label for="star1">&#9733;</label>
+                  </div>
+                </div>
+              </form>
+              <form action="/logout" method="post">
+                <input type="submit" value="Logout">
+              </form>
+              <h2>Answer: <%= answer %></h2>
+            </div>
+          
+            <div class="sidebar">
+              <h2>Answers</h2>
+              <ul>
+                <!-- <li><span>Answer 1:</span> Lorem ipsum dolor sit amet</li>
+                <li><span>Answer 2:</span> Consectetur adipiscing elit</li>
+                <li><span>Answer 3:</span> Sed do eiusmod tempor incididunt</li> -->
+              </ul>
+            </div>
+          
+            <script>
+              const ratingInputs = document.querySelectorAll('.rating input');
+              const labels = document.querySelectorAll('.rating label');
+          
+              ratingInputs.forEach((input, index) => {
+                input.addEventListener('change', () => {
+                  resetColors();
+                  colorStars(index);
+                });
+              });
+          
+              function resetColors() {
+                labels.forEach(label => {
+                  label.style.color = '#ddd';
+                });
+              }
+          
+              function colorStars(index) {
+                for (let i = 0; i <= index; i++) {
+                  labels[i].style.color = '#ffca08';
+                }
+              }
+            </script>
+          </body>
+          
+          <style>
+            /* CSS styles go here */
+          </style>
+          </html>
