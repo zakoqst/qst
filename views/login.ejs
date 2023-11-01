@@ -80,11 +80,13 @@
             <input type="text" id="username" name="username">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password">
+            <!-- <input type="text" name="userType" value="طالب" /> -->
+
             <label for="userType">User Type:</label>
-            <select id="userType" name="userType">
-                <option value="أستاذ">أستاذ</option>
+            <select id="userType" name="userType"> 
+                 <option value="أستاذ">أستاذ</option>
                 <option value="طالب">طالب</option>
-            </select>
+            </select> 
             <input type="submit" value="Login">
             <% if (locals.loginError) { %>
                 <p class="error-message"><%= loginError %></p>

@@ -1,0 +1,4 @@
+[1029/161822.566:ERROR:filesystem_win.cc(130)] GetFileAttributes C:\Users\MCS\AppData\Local\Google\Chrome\User Data\Crashpad\attachments\3fe958aa-a06a-49df-92c9-7d34d513b04a: Le fichier spécifié est introuvable. (0x2)
+[1029/161822.571:ERROR:filesystem_win.cc(130)] GetFileAttributes C:\Users\MCS\AppData\Local\Google\Chrome\User Data\Crashpad\attachments\3fe958aa-a06a-49df-92c9-7d34d513b04a: Le fichier spécifié est introuvable. (0x2)
+[1029/161822.571:ERROR:filesystem_win.cc(130)] GetFileAttributes C:\Users\MCS\AppData\Local\Google\Chrome\User Data\Crashpad\attachments\3fe958aa-a06a-49df-92c9-7d34d513b04a: Le fichier spécifié est introuvable. (0x2)
+[1029/161822.572:ERROR:filesystem_win.cc(130)] GetFileAttributes C:\Users\MCS\AppData\Local\Google\Chrome\User Data\Crashpad\attachments\3fe958aa-a06a-49df-92c9-7d34d513b04a: Le fichier spécifié est introuvable. (0x2)

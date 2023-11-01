@@ -6,11 +6,30 @@ const Schema = mongoose.Schema;
 require('dotenv').config();
 const path = require('path');
 const app = express();
-
-
+const bcrypt = require('bcryptjs');
+const Joi = require('joi');
+const ngrok = require('ngrok');
 const uri = process.env.DB_URI;
-// Set up MongoDB connection
-// const uri = '€';
+const https = require('https');
+const fs = require('fs');
+const crypto = require('crypto');
+// const { render } = require('ejs');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
+// const csrfProtection = csrf({ cookie: true });
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const notifier = require('node-notifier');
+const options = {
+  key: fs.readFileSync('localhost-key.pem'),
+  cert: fs.readFileSync('localhost.pem'),
+};
+
+
+
+// const SESSION_SECRET = 'your-random-session-secret';
+// const sessionSecret = crypto.randomBytes(32).toString('hex');
+// Connect to MongoDB
 
 // Connect to MongoDB
 async function connectToMongo() {
@@ -22,433 +41,145 @@ async function connectToMongo() {
   }
 }
 
-connectToMongo();
+  connectToMongo();
+
 
 const userRegistrationSchema = new Schema({
   username: { type: String, required: true },
   password: { type: String, required: true },
-  userType: { type: String, required: true }
+  userType: { type: String, required: true, enum: ['طالب', 'أستاذ'] }
 });
+
 
 const UserRegistration = mongoose.model('UserRegistration', userRegistrationSchema);
 
+const userQuestionsSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true
+  },
+  text: {
+    type: String,
+    required: true
+  },
+  answer: {
+    type: String
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const UserQuestions = mongoose.model('UserQuestions', userQuestionsSchema);
 
 
+// Add pre-save hook to hash passwords
+userRegistrationSchema.pre('save', async function(next) {
+  const user = this;
 
+  if (user.isModified('password')) {
+    user.password = await bcrypt.hash(user.password, 8);
+  }
+  
+  next();
+});
 
-  const userQuestionsSchema = new mongoose.Schema({
-    text: {
-      type: String,
-      required: true
-    },
-    answer: {
-      type: String
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now
-    }
-  });
+const UserQuestionsCollection = mongoose.model('UserQuestions', userQuestionsSchema);
 
+// const sessionSecret = 'secret';
 
-  const UserQuestionsCollection = mongoose.model('UserQuestions', userQuestionsSchema);
+const sessionSecret = crypto.randomBytes(32).toString('hex');
+// app.use(cookieParser());
 
-
-// Configure middleware
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-  secret: 'your-secret-key',
-  resave: true,
+  secret: sessionSecret,
+  resave: false,
   saveUninitialized: true
 }));
+
+// const csrfProtection = csrf({
+//   cookie: true,
+//   ignoreMethods: ['GET'] // CSRF protection will be disabled for GET requests
+// });
+
+// app.use(csrfProtection);
+// Configure middleware
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.set('view engine', 'ejs');
 
-
-
-function fetchUserQuestions(userId) {
-    return UserQuestion.find({ userId }).exec();
+// Authentication middleware
+function requireAuth(req, res, next) {
+  if (req.session.loggedIn) {
+  return next();
   }
-
-  // app.post('/answer', async (req, res) => {
-  //   try {
-  //     const { questionId, answer } = req.body;
-  
-  //     // Update the question with the provided answer
-  //     const updatedQuestion = await UserQuestionsCollection.findByIdAndUpdate(
-  //       questionId,
-  //       { answer },
-  //       { new: true }
-  //     );
-  
-  //     if (!updatedQuestion) {
-  //       // Question not found
-  //       return res.status(404).send('السؤال غير موجود.');
-  //     }
-  
-  //     // Generate the updated HTML content
-  //     const html = generateUpdatedHtml(updatedQuestion);
-  
-  //     // Send the updated HTML as the response
-  //     res.send(html);
-  //   } catch (error) {
-  //     console.error(error);
-  //     res.status(500).send('حدث خطأ أثناء إرسال الإجابة.');
-  //   }
-  // });
-
-  // app.get('/', async (req, res) => {
-  //   const loggedIn = req.session.loggedIn;
-  //   const userType = req.session.userType;
-  
-  //   if (loggedIn && userType === 'أستاذ') {
-  //     try {
-  //       UserQuestionsCollection.find()
-  //         .exec()
-  //         .then(async (questions) => {
-  //           // const questions = await UserQuestionsCollection.find().exec();
-
-  //           // Sort questions in descending order based on timestamp
-  //           questions.sort((a, b) => b.timestamp - a.timestamp);
-  
-  //           let cardsHtml = '';
-  
-  //           questions.forEach((question) => {
-  //             cardsHtml += `
-  //               <div class="col-md-4 mb-4">
-  //                 <div class="card">
-  //                   <div class="card-body">
-  //                     <h5 class="card-title">${question.text}</h5>
-  //                     <form action="/answer" method="post">
-  //                       <div class="mb-3">
-  //                         <textarea class="form-control" name="answer" rows="3" placeholder="Enter your answer"></textarea>
-  //                       </div>
-  //                       <input type="hidden" name="questionId" value="${question._id}">
-  //                       <button type="submit" class="btn btn-primary">إجابة</button>
-  //                     </form>
-  //                   </div>
-  //                 </div>
-  //               </div>
-  //             `;
-  //           });
-  
-  //           let html = `
-  //             <html>
-  //             <head>
-  //               <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-  //               <title>إطرح سؤالك</title>
-  //               <style>
-  //                 .card {
-  //                   margin-bottom: 20px;
-  //                 }
-                  
-  //                 .card-title {
-  //                   font-size: 1.2rem;
-  //                   font-weight: bold;
-  //                 }
-                  
-  //                 .btn {
-  //                   margin-top: 10px;
-  //                 }
-  //               </style>
-  //             </head>
-  //             <body>
-  //               <img src="images/speaker.jpg" alt="Image" style="width: 150px; height: 150px;">
-  //               <h2>جميع الأسئلة</h2>
-  //               <div class="container">
-  //                 <div class="row">
-  //                   ${cardsHtml}
-  //                 </div>
-  //               </div>
-  //               <form action="/logout" method="post">
-  //                 <input type="submit" value="Logout" class="btn btn-danger"> 
-  //               </form>
-  //               <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-  //             </body>
-  //             </html>
-  //           `;
-  
-  //         res.send(html);
-  //       })
-  //       .catch(err => {
-  //         res.status(500).send('حدث خطأ أثناء استرداد الأسئلة.');
-  //       });
-  //   } catch (error) {
-  //     res.status(500).send('حدث خطأ أثناء استرداد الأسئلة.');
-  //   }
-  //   } else if (userType === 'طالب') {
-  //       let html = `
-  //       <html>
-  //       <head>
-  //         <title>الدخول</title>
-  //         <style>
-  //         body {
-  //           font-family: Arial, sans-serif;
-  //           background-color: #f8f8f8;
-  //           margin: 0;
-  //           padding: 0;
-  //         }
-          
-  //         .container {
-  //           max-width: 600px;
-  //           margin: 0 auto;
-  //           padding: 20px;
-  //           background-color: #fff;
-  //           border-radius: 5px;
-  //           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  //           transform: translateX(-31px) translateY(0px);
-  //         }
-          
-  //         h2 {
-  //           text-align: center;
-  //           color: #333;
-  //         }
-          
-  //         form {
-  //           margin-top: 20px;
-  //         }
-          
-  //         label {
-  //           display: block;
-  //           margin-bottom: 10px;
-  //           color: #333;
-  //           font-weight: bold;
-  //         }
-          
-  //         input[type="text"] {
-  //           width: 100%;
-  //           padding: 10px;
-  //           font-size: 16px;
-  //           border-radius: 5px;
-  //           border: 1px solid #ddd;
-  //           outline: none;
-  //         }
-          
-  //         input[type="submit"] {
-  //           display: block;
-  //           margin: 18px auto;
-  //           padding: 10px 20px;
-  //           font-size: 18px;
-  //           background-color: #4caf50;
-  //           color: #fff;
-  //           border: none;
-  //           border-radius: 5px;
-  //           cursor: pointer;
-  //           transition: background-color 0.3s ease-in-out;
-  //         }
-  //         input[type="submit"]:hover {
-  //           background-color: #45a049;
-  //         }
-          
-  //         .rate-section {
-  //           margin-top: 20px;
-  //         }
-          
-  //         .rating {
-  //           display: flex;
-  //           justify-content: center;
-  //           align-items: center;
-  //           flex-direction: row;
-  //           font-size: 30px;
-  //         }
-          
-  //         .rating input {
-  //           display: none;
-  //         }
-          
-  //         .rating label {
-  //           color: #ddd;
-  //           margin: 0 5px;
-  //           cursor: pointer;
-  //           transition: color 0.3s ease-in-out;
-  //         }
-          
-  //         .rating input:checked ~ label,
-  //         .rating input:hover ~ label {
-  //           color: #ffca08; /* Color for the selected star */
-  //         }
-          
-  //         .container img {
-  //           display: inline-block;
-  //           transform: translateX(218px) translateY(0px);
-  //         }
-          
-  //         #question {
-  //           transform: translateX(0px) translateY(3px) !important;
-  //         }
-          
-  //         .container form p {
-  //           text-align: center;
-  //         }
-          
-  //         .container form h3 {
-  //           text-align: center;
-  //           position: relative;
-  //           top: 6px;
-  //         }
-  //         /* Container */
-  //         .container{
-  //          transform:translatex(-12px) translatey(155px);
-  //          border-width:1px;
-  //          border-color:#a0a0a0;
-  //          border-style:solid;
-  //          margin-right:auto !important;
-  //         }
-          
-  //         /* Label */
-  //         .container form label{
-  //          text-align:right;
-  //          position:relative;
-  //          left:-6px;
-  //         }
-          
-          
-  //         </style>
-  //       </head>
-  //       <body>
-  //         <div class="container">
-  //           <img src="images/student.webp" alt="Image" style="width: 150px; height: 150px;">
-  //           <h2>إطرح سؤالك</h2>
-  //           <form action="/submit" method="post">
-  //             <label for="question">أكتب سؤالك هنا</label>
-  //             <input type="text" id="question" name="question">
-  //             <input type="submit" value="Submit">
-  //             <div class="rate-section">
-  //               <h3>إعطي تقييما للأستاذ</h3>
-  //               <p>Please provide your feedback by rating our service:</p>
-  //               <div class="rating">
-  //                 <input type="radio" id="star5" name="rating" value="5" />
-  //                 <label for="star5">&#9733;</label>
-  //                 <input type="radio" id="star4" name="rating" value="4" />
-  //                 <label for="star4">&#9733;</label>
-  //                 <input type="radio" id="star3" name="rating" value="3" />
-  //                 <label for="star3">&#9733;</label>
-  //                 <input type="radio" id="star2" name="rating" value="2" />
-  //                 <label for="star2">&#9733;</label>
-  //                 <input type="radio" id="star1" name="rating" value="1" />
-  //                 <label for="star1">&#9733;</label>
-  //               </div>
-  //             </div>
-  //           </form>
-  //           <form action="/logout" method="post">
-  //             <input type="submit" value="Logout">
-  //           </form>
-  //         </div>
-      
-  //         <script>
-  //           const ratingInputs = document.querySelectorAll('.rating input');
-  //           const labels = document.querySelectorAll('.rating label');
-      
-  //           ratingInputs.forEach((input, index) => {
-  //             input.addEventListener('change', () => {
-  //               resetColors();
-  //               colorStars(index);
-  //             });
-  //           });
-      
-  //           function resetColors() {
-  //             labels.forEach(label => {
-  //               label.style.color = '#ddd';
-  //             });
-  //           }
-      
-  //           function colorStars(index) {
-  //             for (let i = 0; i <= index; i++) {
-  //               labels[i].stylecolor = '#ffca08';
-  //             }
-  //           }
-  //         </script>
-  //       </body>
-  //       </html>
-  //     `;
-  //     res.send(html);
-  //   } else {
-  //     const loginError = req.session.loginError; // Retrieve the login error message from the session
-  //     req.session.loginError = null; // Clear the login error message from the session
-  
-  //     res.render('login.ejs', { loginError: loginError }); // Render the login template with the loginError variable
-  //   }
-  // });
-
-app.get('/', (req,res)=> {
-  res.sendFile(__dirname + '/home.html');
-
-})
+  res.redirect('/login');
+}
 
 
-// POST route to handle answering a question
-app.post('/answer', async (req, res) => {
+function fetchUserQuestions(username) {
+  return UserQuestions.find({ username }).exec();
+}
+// Set CSRF token in response locals
+// app.use((req, res, next) => {
+//   res.locals.csrfToken = req.csrfToken();
+//   next();
+// });
+
+
+// Registration route
+app.get('/register', (req, res) => {
+  const loginError = req.session.loginError;
+  const answer = req.query.answer;
+
+  res.render('register', { loginError, answer });
+});
+
+app.post('/register', async (req, res) => {
   try {
-    const { questionId, answer } = req.body;
+    const { username, password, userType } = req.body;
+    const existingUser = await UserRegistration.findOne({ username: username });
 
-    // Update the question with the provided answer
-    const updatedQuestion = await UserQuestionsCollection.findByIdAndUpdate(
-      questionId,
-      { answer },
-      { new: true }
-    );
-
-    if (!updatedQuestion) {
-      // Question not found
-      return res.status(404).send('السؤال غير موجود.');
+    if (existingUser) {
+      return res.status(409).send('User already exists.');
     }
 
-    // Render the template.ejs template with the updated answer
-    res.render('template', { answer: updatedQuestion.answer });
+    const newUser = new UserRegistration({
+      username: username,
+      password: password,
+      userType: userType
+    });
 
+    await newUser.save();
+
+    res.redirect('/');
   } catch (error) {
-    console.error(error);
-    res.status(500).send('حدث خطأ أثناء إرسال الإجابة.');
+    console.error('Registration error:', error);
+    res.status(500).send('An error occurred while registering the user.');
   }
 });
 
-// GET route for the login page
+// Login routes
 app.get('/login', async (req, res) => {
   try {
-    const loginError = req.session.loginError; // Retrieve the login error message from the session
-    req.session.loginError = null; // Clear the login error message from the session
+    const loginError = req.session.loginError;
+    req.session.loginError = null;
+    const answer = req.query.answer;
 
-    const answer = req.query.answer; // Retrieve the answer from the query parameters
-
-    res.render('login.ejs', { loginError: loginError, answer: answer });
+    res.render('login.ejs', { loginError, answer });
   } catch (error) {
     console.error(error);
-    res.status(500).send('حدث خطأ أثناء تسجيل الدخول.');
+    res.status(500).send('An error occurred while rendering the login page.');
   }
 });
 
-// GET route for the user-specific page
-app.get('/:username', async (req, res) => {
-  try {
-    // Retrieve the user type from the session or wherever it is stored
-    const userType = req.session.userType; // Adjust this based on your authentication mechanism
-    const loggedIn = req.session.loggedIn; // Adjust this based on your authentication mechanism
-    const answer = req.session.answer; // Retrieve the answer from the session
-
-    // Retrieve the questions from the database
-    const questions = await UserQuestionsCollection.find();
-
-    // Render the HTML template and pass the user type and questions as data
-    if (loggedIn && userType === 'طالب') {
-      // Additional logic for students
-      res.render('template', { userType, questions, answer });
-    } else {
-      // Default template for other user types
-      res.render('teacher-template', { userType, questions });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('حدث خطأ أثناء جلب الأسئلة.');
-  }
-});
-
-// Login route
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   const userType = req.body.userType;
-  const answer = req.body.answer; // Add the answer variable
+  const answer = req.body.answer;
 
   UserRegistration.findOne({ username: username, password: password, userType: userType })
     .then(user => {
@@ -457,7 +188,8 @@ app.post('/login', (req, res) => {
         req.session.username = username;
         req.session.password = password;
         req.session.userType = userType;
-        req.session.answer = answer; // Store the answer in the session
+        req.session.answer = answer;
+
         res.redirect(`/${username}`);
       } else {
         req.session.loginError = 'Invalid username, password, or user type.';
@@ -469,38 +201,7 @@ app.post('/login', (req, res) => {
     });
 });
 
-app.get('/register', (req, res) => {
-  res.sendFile(__dirname + '/register.html');
-});
-
-app.post('/register', async (req, res) => {
-    const { username, password, userType } = req.body;
-  
-    try {
-      // Check if the user already exists
-      const existingUser = await UserRegistration.findOne({ username: username });
-  
-      if (existingUser) {
-        return res.status(409).send('User already exists.');
-      }
-  
-      // Create a new user
-      const newUser = new UserRegistration({
-        username: username,
-        password: password,
-        userType: userType
-      });
-  
-      await newUser.save();
-  
-      res.redirect('/');
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).send('An error occurred while registering the user.');
-    }
-  });
-  
-
+// Logout route
 app.post('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -511,31 +212,154 @@ app.post('/logout', (req, res) => {
     res.redirect('/');
   });
 });
-// Submit route
+
 app.post('/submit', (req, res) => {
-    const loggedIn = req.session.loggedIn;
-    const username = req.session.username;
+  const username = req.session.username; // get from session
+  const question = req.body.question;
+
+  if (!('username' in req.session) || !('question' in req.body)) {
+    return res.status(400).json({
+      error: 'Username and question text are required'
+    });
+  }
+
+console.log(question);
+  // Create question document
+  UserQuestionsCollection.create({
+    text: question,
+    username
+  })
+    .then(question => {
+      // sendNotification(username);
+      sendNotification('New Message', 'You have a new message.',username);
+
+      io.emit('notification', { message: 'Notification sent' });
     
-    if (loggedIn) {
-      const question = req.body.question;
-  
-      UserQuestionsCollection.create({
-        text: question,
-        username: username
-      })
-        .then(() => {
-          res.redirect(`/${username}`);
-        })
-        .catch(error => {
-          res.status(500).send('An error occurred while submitting the question.');
-        });
+      res.redirect(`/${username}`);
+
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({
+        error: `Error creating question: ${err.message}`
+      });
+    });
+});
+
+// Answer submission route
+app.post('/answer', requireAuth, async (req, res) => {
+  try {
+    const { questionId, username } = req.body;
+
+    const updatedQuestion = await UserQuestionsCollection.findByIdAndUpdate(
+      questionId,
+      { answer: req.body.answer },
+      { new: true }
+    );
+
+    if (!updatedQuestion) {
+      return res.status(404).send('السؤال غير موجود.');
+    }
+
+    res.redirect(`/${username}`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating answer');
+  }
+});
+
+// User profile route
+app.get('/:username', requireAuth, async (req, res) => {
+  try {
+    // const csrfToken = req.csrfToken();
+    const userType = req.session.userType;
+    const loggedIn = req.session.loggedIn;
+    const username = req.params.username;
+    const questions = await UserQuestionsCollection.find();
+    const updatedQuestion = await UserQuestionsCollection.findOneAndUpdate(
+      { username: username },
+      { answer: req.body.answer },
+      { new: true, sort: { timestamp: -1 } }
+    );
+
+    let answer = null;
+    if (updatedQuestion) {
+      answer = updatedQuestion.answer;
+    }
+
+    let template;
+    let params = {};
+
+    if (userType === 'طالب') {
+      template = 'template';
+      params = { userType, questions, answer };
+    } else if (userType === 'أستاذ') {
+      template = 'teacher-template';
+      params = { userType, questions };
     } else {
-      res.redirect('/');
+      throw new Error('Invalid user type');
+  }
+
+  // Render the HTML template using the correct template and params
+  res.render(template, params);
+} catch (error) {
+  console.error(error);
+  res.status(500).send('حدث خطأ أثناء جلب الأسئلة.');
+}
+
+});
+
+
+
+// const port = 4000;
+app.get('/', (req, res) => {
+  res.sendFile('views/home.html', { root: __dirname });
+});
+
+
+
+
+
+function sendNotification(title, message, username) {
+  // Configure the notification
+  const notificationOptions = {
+    title: "hالجواب",
+    message: "message",
+    sound: true, // Enable notification sound
+    wait: true, // Wait for notification to be dismissed by the user
+  };
+
+  // Send the notification
+  notifier.notify(notificationOptions, function (err, response) {
+    if (err) {
+      console.error('Failed to send notification:', err);
+    } else {
+      console.log('Notification sent');
     }
   });
+}
+
+// Example usage
+
+// Wait for the notification to be dismissed
+notifier.on('click', function (notifierObject, options) {
+  console.log('Notification clicked');
+});
+
+
+// // Function to send notification
+// function sendNotification(username) {
+//   // Customize this function to send the notification to the user
+//   // You can use email, SMS, push notifications, or any other method
+//   console.log(`Notification sent to ${username}`);
+// }
+
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+  console.log('A user connected');
+});
 
 // Start the server
-// const port = 3000;
-app.listen( process.env.PORT, () => {
-  console.log(`Server is running on http://localhost:${process.env.PORT}`);
+http.listen(process.env.PORT, () => {
+  console.log('Server listening on port ');
 });

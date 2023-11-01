@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -27,13 +29,17 @@
         <div class="col-md-4 mb-4">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title"><%= question.text %></h5>
-              <form action="/answer" method="post">
-                <div class="mb-3">
-                  <textarea class="form-control" name="answer" rows="3" placeholder="Enter your answer"></textarea>
-                </div>
-                <input type="hidden" name="questionId" value="<%= question._id %>">
-                <button type="submit" class="btn btn-primary">إجابة</button>
+              <h5 class="card-title">Student: <%= question.username %></h5> <!-- Display the student's username -->
+              <p class="card-text"><%= question.text %></p> <!-- Display the question text -->
+<!-- Update the form in the template.ejs file -->
+<form action="/answer" method="post">
+    <div class="mb-3">
+      <textarea class="form-control" name="answer" rows="3" placeholder="Enter your answer"></textarea>
+    </div>
+    <input type="hidden" name="questionId" value="<%= question._id %>">
+    <input type="hidden" name="username" value="<%= question.username %>"> <!-- Add the username field -->
+    <button type="submit" class="btn btn-primary">إجابة</button>
+  </form>
               </form>
             </div>
           </div>
@@ -41,9 +47,40 @@
       <% }); %>
     </div>
   </div>
+  <script>
+    </script>
+  <script>
+  </script>
   <form action="/logout" method="post">
     <input type="submit" value="Logout" class="btn btn-danger">
   </form>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+$(document).ready(function() {
+$('#answerForm').submit(function(event) {
+  event.preventDefault(); // Prevent the default form submission
+
+  // Get the form data
+  var formData = $(this).serialize();
+
+  // Send the form data using AJAX
+  $.ajax({
+    type: 'POST',
+    url: '/answer',
+    data: formData,
+    success: function(response) {
+      // Handle the response from the server
+      // You can update the page dynamically here
+      console.log(response);
+    },
+    error: function(error) {
+      console.error(error);
+    }
+  });
+});
+});
+</script>
+
 </body>
 </html>

@@ -10,13 +10,22 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "crypto": "^1.0.1",
+    "csurf": "^1.11.0",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "joi": "^17.11.0",
     "mongodb": "^6.2.0",
-    "mongoose": "^7.6.3"
+    "mongoose": "^7.6.3",
+    "ngrok": "^5.0.0-beta.2",
+    "node-notifier": "^10.0.1",
+    "socket.io": "^4.7.2",
+    "ws": "^8.14.2"
   },
   "engines": {
     "node": ">=18.18.0 <19.0.0"
