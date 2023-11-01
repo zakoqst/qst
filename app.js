@@ -47,7 +47,7 @@ async function connectToMongo() {
 const userRegistrationSchema = new Schema({
   username: { type: String, required: true },
   password: { type: String, required: true },
-  userType: { type: String, required: true, enum: ['طالب', 'أستاذ'] }
+  userType: { type: String, required: true, enum: ['ETUDIANT', 'PROFESSEUR'] }
 });
 
 
@@ -177,12 +177,14 @@ app.get('/login', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const username = req.body.username;
+
   const password = req.body.password;
   const userType = req.body.userType;
   const answer = req.body.answer;
 
   UserRegistration.findOne({ username: username, password: password, userType: userType })
     .then(user => {
+
       if (user) {
         req.session.loggedIn = true;
         req.session.username = username;
@@ -190,7 +192,7 @@ app.post('/login', async (req, res) => {
         req.session.userType = userType;
         req.session.answer = answer;
 
-        res.redirect(`/${username}`);
+        res.redirect(`/${username}/${userType}`);
       } else {
         req.session.loginError = 'Invalid username, password, or user type.';
         res.redirect('/login');
@@ -215,6 +217,7 @@ app.post('/logout', (req, res) => {
 
 app.post('/submit', (req, res) => {
   const username = req.session.username; // get from session
+  const userType = req.session.userType;
   const question = req.body.question;
 
   if (!('username' in req.session) || !('question' in req.body)) {
@@ -235,7 +238,7 @@ console.log(question);
 
       io.emit('notification', { message: 'Notification sent' });
     
-      res.redirect(`/${username}`);
+      res.redirect(`/${username}/${userType}`);
 
     })
     .catch(err => {
@@ -249,7 +252,7 @@ console.log(question);
 // Answer submission route
 app.post('/answer', requireAuth, async (req, res) => {
   try {
-    const { questionId, username } = req.body;
+    const { questionId, username,userType } = req.body;
 
     const updatedQuestion = await UserQuestionsCollection.findByIdAndUpdate(
       questionId,
@@ -261,7 +264,7 @@ app.post('/answer', requireAuth, async (req, res) => {
       return res.status(404).send('السؤال غير موجود.');
     }
 
-    res.redirect(`/${username}`);
+    res.redirect(`/${username}/${userType}`);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error updating answer');
@@ -269,7 +272,7 @@ app.post('/answer', requireAuth, async (req, res) => {
 });
 
 // User profile route
-app.get('/:username', requireAuth, async (req, res) => {
+app.get('/:username/:userType', requireAuth, async (req, res) => {
   try {
     // const csrfToken = req.csrfToken();
     const userType = req.session.userType;
@@ -290,10 +293,10 @@ app.get('/:username', requireAuth, async (req, res) => {
     let template;
     let params = {};
 
-    if (userType === 'طالب') {
+    if (userType === 'ETUDIANT') {
       template = 'template';
       params = { userType, questions, answer };
-    } else if (userType === 'أستاذ') {
+    } else if (userType === 'PROFESSEUR') {
       template = 'teacher-template';
       params = { userType, questions };
     } else {
